@@ -1,0 +1,13 @@
+---
+name: 18f-cf
+packages: []
+templates:
+  bin/monit_debugger: bin/monit_debugger
+  bin/18f_cf_ctl: bin/18f_cf_ctl
+  config/18f_cf.conf.erb: config/18f_cf.conf
+  data/properties.sh.erb: data/properties.sh
+  helpers/ctl_setup.sh: helpers/ctl_setup.sh
+  helpers/ctl_utils.sh: helpers/ctl_utils.sh
+properties:
+  18f_cf.leader_address:
+    description: Hostname/IP to the leader/master of the cluster

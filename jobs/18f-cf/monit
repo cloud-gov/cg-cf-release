@@ -1,0 +1,5 @@
+check process 18f_cf
+  with pidfile /var/vcap/sys/run/18f_cf/18f_cf.pid
+  start program "/var/vcap/jobs/18f_cf/bin/monit_debugger 18f_cf_ctl '/var/vcap/jobs/18f_cf/bin/18f_cf_ctl start'"
+  stop program "/var/vcap/jobs/18f_cf/bin/monit_debugger 18f_cf_ctl '/var/vcap/jobs/18f_cf/bin/18f_cf_ctl stop'"
+  group vcap

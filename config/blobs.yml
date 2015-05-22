@@ -1,1 +1,17 @@
---- {}
+---
+ruby-2.1.6/bundler-1.9.4.gem:
+  object_id: 91bd5b8e-d738-453d-ba00-c8395b06136d
+  sha: ea3f17a76a8249049b5589c9b5421af72189babc
+  size: 244224
+ruby-2.1.6/ruby-2.1.6.tar.gz:
+  object_id: 6e594f2b-616b-4524-bc59-67097ce73e1f
+  sha: 426289b6647ce35ad101091825b6e7e5fce207f3
+  size: 15141710
+ruby-2.1.6/rubygems-2.4.6.tgz:
+  object_id: 4d9dea21-f332-4217-aae3-fbd097ae2654
+  sha: bf59306c0f6c37551875e70ce8ccfb1cbc60c28b
+  size: 447588
+ruby-2.1.6/yaml-0.1.6.tar.gz:
+  object_id: 057cba9a-0b85-403f-826c-5b0670a568f7
+  sha: f3d404e11bec3c4efcddfd14c42d46f1aabe0b5d
+  size: 503012

@@ -1,0 +1,31 @@
+---
+packages:
+- name: 18f-common
+  version: b33460625c5feb2c1711d1c6a74b29f0f23bd728
+  fingerprint: b33460625c5feb2c1711d1c6a74b29f0f23bd728
+  sha1: f61836bbdf0f9ae45b6bd6fadae5d400d27145c5
+  dependencies: []
+- name: collector
+  version: 62a0ef881ceb06c6fde2009b21ebd31119fe6834
+  fingerprint: 62a0ef881ceb06c6fde2009b21ebd31119fe6834
+  sha1: e906864eb57c122712d913510692205b8b3b96ec
+  dependencies:
+  - ruby-2.1.6
+- name: ruby-2.1.6
+  version: fcc91ffcd6664719c89f259e635cb13a8f8c494f
+  fingerprint: fcc91ffcd6664719c89f259e635cb13a8f8c494f
+  sha1: d0500a00f36c0a28017d5609c91623a44c6de752
+  dependencies: []
+jobs:
+- name: collector
+  version: 623d66ad6c5c370d2e26088897a6d28572f44138
+  fingerprint: 623d66ad6c5c370d2e26088897a6d28572f44138
+  sha1: 30ec9e7b74793946fabf442a86305453bd68ba88
+license:
+  version: 8bd9acb31d2fea0a32f18193b71faaab83d2079b
+  fingerprint: 8bd9acb31d2fea0a32f18193b71faaab83d2079b
+  sha1: 5bfac00d9f2d0b617294dd7c1efe54c96f5805c0
+commit_hash: a521e240
+uncommitted_changes: true
+name: 18f-cf
+version: '2'

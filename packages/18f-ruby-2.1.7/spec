@@ -1,0 +1,8 @@
+---
+name: 18f-ruby-2.1.7
+files:
+- 18f-ruby-2.1.7/ruby-2.1.7.tar.gz
+- 18f-ruby-2.1.7/bundler-1.9.4.gem
+- 18f-ruby-2.1.7/yaml-0.1.6.tar.gz
+- architecture-support/config/config.guess
+- architecture-support/config/config.sub

@@ -15,3 +15,27 @@ ruby-2.1.6/yaml-0.1.6.tar.gz:
   object_id: 057cba9a-0b85-403f-826c-5b0670a568f7
   sha: f3d404e11bec3c4efcddfd14c42d46f1aabe0b5d
   size: 503012
+openjdk/openjdk-1.8.0_60-x86_64-mountainlion.tar.gz:
+  object_id: c40c4e90-8b6a-47e9-9047-c7a9b62d9145
+  sha: d5adc079c1b1e74957f60e627d225173dbc96286
+  size: 81913035
+openjdk/openjdk-1.8.0_60-x86_64-trusty-jre.tar.gz:
+  object_id: 9a1fc6b8-4135-473c-b5ab-e762edb110d4
+  sha: 00a58600bd56007832f1caca487187c023f10ec5
+  size: 45029837
+openjdk/openjdk-1.8.0_60-x86_64-trusty.tar.gz:
+  object_id: af76716a-22ba-4ce6-a914-fb832a39d606
+  sha: 1831bb9db77e304c9b0167d5b61350aa83393a22
+  size: 77540278
+18f-ruby-2.1.7/bundler-1.9.4.gem:
+  object_id: 6be3a747-c7ce-4596-b4d3-9c4daf513ecd
+  sha: ea3f17a76a8249049b5589c9b5421af72189babc
+  size: 244224
+18f-ruby-2.1.7/ruby-2.1.7.tar.gz:
+  object_id: 40457b90-5c27-46bf-aa58-0f81683b3254
+  sha: e2e195a4a58133e3ad33b955c829bb536fa3c075
+  size: 15151458
+18f-ruby-2.1.7/yaml-0.1.6.tar.gz:
+  object_id: 27c08c8b-e267-4c66-a648-b99f151e864a
+  sha: f3d404e11bec3c4efcddfd14c42d46f1aabe0b5d
+  size: 503012

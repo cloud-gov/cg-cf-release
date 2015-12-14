@@ -316,6 +316,8 @@ properties:
   login.brand:
     description: "The branding style to use with the web interface, account confirmation, and password reset emails."
     default: oss
+  login.brand_title:
+    description: "The brand title."
   login.asset_base_url:
     description: "Base url for static assets, allows custom styling of the login server."
   login.uaa_certificate:

@@ -1,0 +1,51 @@
+---
+packages:
+- name: 18f-common
+  version: b33460625c5feb2c1711d1c6a74b29f0f23bd728
+  fingerprint: b33460625c5feb2c1711d1c6a74b29f0f23bd728
+  sha1: f61836bbdf0f9ae45b6bd6fadae5d400d27145c5
+  dependencies: []
+- name: 18f-ruby-2.1.7
+  version: deabb35cb33f87b84cdf7ddb9a854e226a9d3ceb
+  fingerprint: deabb35cb33f87b84cdf7ddb9a854e226a9d3ceb
+  sha1: 220a0c9e698b71a2218c6e2f9be20c1cce5ebc91
+  dependencies: []
+- name: collector
+  version: 62a0ef881ceb06c6fde2009b21ebd31119fe6834
+  fingerprint: 62a0ef881ceb06c6fde2009b21ebd31119fe6834
+  sha1: e906864eb57c122712d913510692205b8b3b96ec
+  dependencies:
+  - ruby-2.1.6
+- name: common
+  version: e401816a4748292163679fafcbd8f818ed8154a5
+  fingerprint: e401816a4748292163679fafcbd8f818ed8154a5
+  sha1: 22ac13bfb141026ed855a8b9f56d6387fb4c2c33
+  dependencies: []
+- name: ruby-2.1.6
+  version: fcc91ffcd6664719c89f259e635cb13a8f8c494f
+  fingerprint: fcc91ffcd6664719c89f259e635cb13a8f8c494f
+  sha1: d0500a00f36c0a28017d5609c91623a44c6de752
+  dependencies: []
+- name: uaa
+  version: 83e776d30adf35ba19e2d9e1aeaa6d72b8e8f01f
+  fingerprint: 83e776d30adf35ba19e2d9e1aeaa6d72b8e8f01f
+  sha1: 76c66aec2dcc37997d8b56e4ed09a71466ae655a
+  dependencies:
+  - 18f-ruby-2.1.7
+jobs:
+- name: collector
+  version: 623d66ad6c5c370d2e26088897a6d28572f44138
+  fingerprint: 623d66ad6c5c370d2e26088897a6d28572f44138
+  sha1: 30ec9e7b74793946fabf442a86305453bd68ba88
+- name: uaa
+  version: e1d1608c55acc5408e695bad351a8e60fc73defc
+  fingerprint: e1d1608c55acc5408e695bad351a8e60fc73defc
+  sha1: ab64dc9fa30bbcfc603cd0cf03e5fb2c82ba4097
+license:
+  version: 8bd9acb31d2fea0a32f18193b71faaab83d2079b
+  fingerprint: 8bd9acb31d2fea0a32f18193b71faaab83d2079b
+  sha1: 5bfac00d9f2d0b617294dd7c1efe54c96f5805c0
+commit_hash: acbc787e
+uncommitted_changes: true
+name: 18f-cf
+version: '5'

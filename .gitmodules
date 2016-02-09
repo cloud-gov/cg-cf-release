@@ -1,7 +1,7 @@
 [submodule "src/uaa"]
 	path = src/uaa
 	url = git@github.com:18F/cg-uaa.git
-	branch = 18f-2.7.0.3
+	branch = 3.0.1-18f
 [submodule "src/collector"]
 	path = src/collector
 	url = git@github.com:18F/collector.git

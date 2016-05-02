@@ -71,3 +71,15 @@ uaa/newrelic.jar:
   object_id: 88b7d879-0cf7-41ec-af2d-7e5745275881
   sha: a5070963fc84bea27acc1d492cb9e3143f0c4715
   size: 7064901
+openjdk/jce_policy-8.zip:
+  object_id: 61a74b28-9d92-4517-945a-a25aa06017ae
+  sha: 7d25dcee3e6ef2c984d748a14614b37c18ce3507
+  size: 8409
+openjdk/openjdk-1.8.0_91-x86_64-trusty.tar.gz:
+  object_id: 59f066b2-1277-4f71-93db-1ec39d4b0c36
+  sha: 69c612c7f783aad33f4d73ec9b44e1a2ee50f386
+  size: 78278698
+openjdk/openjdk-1.8.0_91-x86_64-mountainlion.tar.gz:
+  object_id: c2a8f53a-6399-4f51-83df-9fcd47110a38
+  sha: 9e916262cf92d6ca0b09f9261d30aeca05f214d7
+  size: 75516939

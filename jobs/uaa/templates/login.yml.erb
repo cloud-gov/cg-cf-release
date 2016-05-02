@@ -2,187 +2,175 @@
 name: login
 
 <%
-  config_artifacts_path = "/var/vcap/jobs/login/config/security"
+  def p_opt(property)
+    p(property, nil)
+  end
+
+  protocol = p('login.protocol')
+
+  uaa_base = p(['uaa.url', 'login.uaa_base'], "#{protocol}://uaa.#{p_opt('domain')}")
+
+  entity_base_url_fallback = uaa_base.sub("://uaa.", "://login.")
+
+  login_entityBaseUrl = nil
+  if_p('login.saml.entity_base_url') do |entity_base_url|
+    login_entityBaseUrl = "#{protocol}://#{entity_base_url}"
+  end .else do
+    login_entityBaseUrl = entity_base_url_fallback
+  end
+
+  login_entityId = p(['login.saml.entityid', 'login.entity_id'], login_entityBaseUrl.sub(/^http.*:\/\//,''))
+
+  login_authorizeUrl = "#{p('uaa.url', entity_base_url_fallback)}/oauth/authorize"
+
+  login_url = p('login.url', login_entityBaseUrl)
+
+  # The login secret is defined in one of two properties
+  # uaa.login.client_secret or uaa.clients.login.secret
+  # If both of these are defined, then use the latter
+  login_secret = p('uaa.clients.login.secret', p_opt('uaa.login.client_secret'))
+  raise ArgumentError, 'uaa.login.client_secret or uaa.clients.login.secret must be set.' unless login_secret
 %>
 
 logging:
   config: /var/vcap/jobs/login/config/log4j.properties
 
-<%
-  # The login secret is defined in one of two properties
-  # uaa.login.client_secret or uaa.clients.login.secret
-  # If both of these are defined, then use the latter
-  if properties.uaa && properties.uaa.clients && properties.uaa.clients.login && properties.uaa.clients.login.secret
-    login_secret = properties.uaa.clients.login.secret
-  elsif properties.uaa && properties.uaa.login && properties.uaa.login.client_secret
-    login_secret = properties.uaa.login.client_secret
-  else
-    raise ArgumentError, 'uaa.login.client_secret or uaa.clients.login.secret must be set.'
-  end
-%>
-
-<% protocol = properties.login.protocol %>
-<% if !properties.login || !properties.login.uaa_base
-  # Fix this to https when SSL certs are working in dev and staging
-  uaa_base = "#{protocol}://uaa.#{properties.domain}"
-else
-  uaa_base = properties.login.uaa_base
-end %>
 uaa:
   url: <%= uaa_base %>
-  token:
-    url: <%= uaa_base %>/oauth/token
-  login:
-    url: <%= uaa_base %>/authenticate
-  clientinfo:
-    url: <%= uaa_base %>/clientinfo
-  approvals:
-    url: <%= uaa_base %>/approvals
-<% if properties.login and properties.login.links then %>
-links: <% properties.login.links.marshal_dump.each do |id,url| %>
+<% if_p('login.links') do |login_links| %>
+links: <% login_links.each do |id,url| %>
   <%= id %>: <%= url %><% end %>
 <% end %>
-<% if properties.login and properties.login.smtp then %>
-smtp: <% properties.login.smtp.marshal_dump.each do |key,val| %>
+<% if_p('login.smtp') do |login_smtp| %>
+smtp: <% login_smtp.each do |key,val| %>
   <%= key %>: <%= val %><% end %>
 <% end %>
-<% if properties.login and properties.login.tiles then %>
-tiles: <% properties.login.tiles.each do |tile| %>
-- <% tile.marshal_dump.each do |key,val| %><%= key %>: <%= val %>
+<% if_p('login.tiles') do |login_tiles| %>
+tiles: <% login_tiles.each do |tile| %>
+- <% tile.each do |key,val| %><%= key %>: <%= val %>
   <% end %>
 <% end %>
 <% end %>
 
 # The secret that this login server will use to authenticate to the uaa
 LOGIN_SECRET: <%= login_secret %>
-<% if !properties.uaa.require_https.nil? %>
-require_https: <%= properties.uaa.require_https %>
-<% end %>
-<% if !properties.uaa.dump_requests.nil? %>
-dump_requests: <%= properties.uaa.dump_requests %>
-<% end %>
+require_https: <%= p('uaa.require_https') %>
+dump_requests: <%= p('uaa.dump_requests') %>
+assetBaseUrl: <%= p('login.asset_base_url') %>
 
-<% if properties.login && properties.login.asset_base_url %>
-assetBaseUrl: <%= properties.login.asset_base_url %>
-<% end %>
-
-<% if properties.login.notifications && properties.login.notifications.url %>
+<% if_p('login.notifications.url') do |login_notifications_url| %>
 notifications:
-  url: <%= properties.login.notifications.url %>
+  url: <%= login_notifications_url %>
 <% end %>
 
-<% if properties.login && properties.login.logout && properties.login.logout.redirect %>
 logout:
   redirect:
-    url: <%= (properties.login.logout.redirect.url) ? properties.login.logout.redirect.url : "/login" %>
+    url: <%= p('login.logout.redirect.url') %>
     parameter:
-      disable: <%= (properties.login.logout.redirect.parameter && (!properties.login.logout.redirect.parameter.disable.nil?)) ? properties.login.logout.redirect.parameter.disable : "true" %><% if (properties.login.logout.redirect.parameter && (!properties.login.logout.redirect.parameter.whitelist.nil?)) %>
-      whitelist: <% properties.login.logout.redirect.parameter.whitelist.each do |whitelistedurl| %>
+      disable: <%= p('login.logout.redirect.parameter.disable') %>
+      <% if_p('login.logout.redirect.parameter.whitelist') do |whitelist| %>
+      whitelist: <% whitelist.each do |whitelistedurl| %>
       - <%= whitelistedurl %><% end %>
    <% end %>
-<% end %>
 
 login:
-  brand: <%= (properties.login && properties.login.brand) ? properties.login.brand : "oss" %>
-  <% if !properties.login.brand_title.nil? %>
-  brand_title: <%= properties.login.brand_title %>
+  branding:
+  <% if_p('login.branding.company_name') do |company_name| %>
+    companyName: <%= company_name %>
   <% end %>
-  url: <%= "#{protocol}://login.#{properties.domain}" %>
-  entityBaseURL: <%= (properties.login && properties.login.saml.entity_base_url) ? "#{protocol}://#{properties.login.saml.entity_base_url}" : "#{protocol}://login.#{properties.domain}" %>
-  entityID: <%= (properties.login && properties.login.saml.entityid) ? properties.login.saml.entityid : properties.login.entity_id ? properties.login.entity_id : "login.#{properties.domain}" %>
-  <% if !properties.login.invitations_enabled.nil? %>
-  invitationsEnabled: <%= properties.login.invitations_enabled %>
+  <% if_p('login.branding.product_logo') do |product_logo| %>
+    productLogo: <%= product_logo %>
   <% end %>
+  <% if_p('login.branding.square_logo') do |square_logo| %>
+    squareLogo: <%= square_logo %>
+  <% end %>
+  <% if_p('login.branding.footer_legal_text') do |footer_legal_text| %>
+    footerLegalText: <%= footer_legal_text %>
+  <% end %>
+  <% if_p('login.branding.footer_links') do |footer_links| %>
+    footerLinks: <% footer_links.each do |key,val| %>
+      <%= key %>: <%= val %><% end %>
+  <% end %>
+<% if_p('login.home_redirect') do |home_redirect| %>
+  homeRedirect: <%= home_redirect %>
+<% end %>
+  url: <%= login_url %>
+  entityBaseURL: <%= login_entityBaseUrl %>
+  entityID: <%= login_entityId %>
   prompt:
     username:
-      text: <%= properties.login.prompt.username.text %>
+      text: <%= p('login.prompt.username.text') %>
     password:
-      text: <%= properties.login.prompt.password.text %>
-<% if properties.login.saml %>
-  <% if !properties.login.saml.serviceProviderCertificate.nil? %>
+      text: <%= p('login.prompt.password.text') %>
+  <% if_p('login.saml.serviceProviderCertificate') do |serviceProviderCert| %>
   serviceProviderCertificate: |
-    <%= p("login.saml.serviceProviderCertificate").gsub("\n", "\n    ")%>
-  <% else %>
-  serviceProviderCertificate: |
-    -----BEGIN CERTIFICATE-----
-    MIIEJTCCA46gAwIBAgIJANIqfxWTfhpkMA0GCSqGSIb3DQEBBQUAMIG+MQswCQYD
-    VQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZyYW5j
-    aXNjbzEdMBsGA1UEChMUUGl2b3RhbCBTb2Z0d2FyZSBJbmMxJDAiBgNVBAsTG0Ns
-    b3VkIEZvdW5kcnkgSWRlbnRpdHkgVGVhbTEcMBoGA1UEAxMTaWRlbnRpdHkuY2Yt
-    YXBwLmNvbTEfMB0GCSqGSIb3DQEJARYQbWFyaXNzYUB0ZXN0Lm9yZzAeFw0xNTA1
-    MTQxNzE5MTBaFw0yNTA1MTExNzE5MTBaMIG+MQswCQYDVQQGEwJVUzETMBEGA1UE
-    CBMKQ2FsaWZvcm5pYTEWMBQGA1UEBxMNU2FuIEZyYW5jaXNjbzEdMBsGA1UEChMU
-    UGl2b3RhbCBTb2Z0d2FyZSBJbmMxJDAiBgNVBAsTG0Nsb3VkIEZvdW5kcnkgSWRl
-    bnRpdHkgVGVhbTEcMBoGA1UEAxMTaWRlbnRpdHkuY2YtYXBwLmNvbTEfMB0GCSqG
-    SIb3DQEJARYQbWFyaXNzYUB0ZXN0Lm9yZzCBnzANBgkqhkiG9w0BAQEFAAOBjQAw
-    gYkCgYEA30y2nX+kICXktl1yJhBzLGvtTuzJiLeOMWi++zdivifyRqX1dwJ5MgdO
-    sBWdNrASwe4ZKONiyLFRDsk7lAYq3f975chxSsrRu1BLetBZfPEmwBH7FCTdYtWk
-    lJbpz0vzQs/gSsMChT/UrN6zSJhPVHNizLxstedyxxVVts644U8CAwEAAaOCAScw
-    ggEjMB0GA1UdDgQWBBSvWY/TyHysYGxKvII95wD/CzE1AzCB8wYDVR0jBIHrMIHo
-    gBSvWY/TyHysYGxKvII95wD/CzE1A6GBxKSBwTCBvjELMAkGA1UEBhMCVVMxEzAR
-    BgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNhbiBGcmFuY2lzY28xHTAbBgNV
-    BAoTFFBpdm90YWwgU29mdHdhcmUgSW5jMSQwIgYDVQQLExtDbG91ZCBGb3VuZHJ5
-    IElkZW50aXR5IFRlYW0xHDAaBgNVBAMTE2lkZW50aXR5LmNmLWFwcC5jb20xHzAd
-    BgkqhkiG9w0BCQEWEG1hcmlzc2FAdGVzdC5vcmeCCQDSKn8Vk34aZDAMBgNVHRME
-    BTADAQH/MA0GCSqGSIb3DQEBBQUAA4GBAL5j1JCN5EoXMOOBSBUL8KeVZFQD3Nfy
-    YkYKBatFEKdBFlAKLBdG+5KzE7sTYesn7EzBISHXFz3DhdK2tg+IF1DeSFVmFl2n
-    iVxQ1sYjo4kCugHBsWo+MpFH9VBLFzsMlP3eIDuVKe8aPXFKYCGhctZEJdQTKlja
-    lshe50nayKrT
-    -----END CERTIFICATE----
+    <%= serviceProviderCert.gsub("\n", "\n    ") %>
   <% end %>
-  <% if !properties.login.saml.serviceProviderKey.nil? %>
+  <% if_p('login.saml.serviceProviderKey') do |serviceProviderKey| %>
   serviceProviderKey: |
-    <%= p("login.saml.serviceProviderKey").gsub("\n", "\n    ")%>
-  <% else %>
-  serviceProviderKey: |
-    -----BEGIN RSA PRIVATE KEY-----
-    MIICXgIBAAKBgQDfTLadf6QgJeS2XXImEHMsa+1O7MmIt44xaL77N2K+J/JGpfV3
-    AnkyB06wFZ02sBLB7hko42LIsVEOyTuUBird/3vlyHFKytG7UEt60Fl88SbAEfsU
-    JN1i1aSUlunPS/NCz+BKwwKFP9Ss3rNImE9Uc2LMvGy153LHFVW2zrjhTwIDAQAB
-    AoGBAJDh21LRcJITRBQ3CUs9PR1DYZPl+tUkE7RnPBMPWpf6ny3LnDp9dllJeHqz
-    a3ACSgleDSEEeCGzOt6XHnrqjYCKa42Z+Opnjx/OOpjyX1NAaswRtnb039jwv4gb
-    RlwT49Y17UAQpISOo7JFadCBoMG0ix8xr4ScY+zCSoG5v0BhAkEA8llNsiWBJF5r
-    LWQ6uimfdU2y1IPlkcGAvjekYDkdkHiRie725Dn4qRiXyABeaqNm2bpnD620Okwr
-    sf7LY+BMdwJBAOvgt/ZGwJrMOe/cHhbujtjBK/1CumJ4n2r5V1zPBFfLNXiKnpJ6
-    J/sRwmjgg4u3Anu1ENF3YsxYabflBnvOP+kCQCQ8VBCp6OhOMcpErT8+j/gTGQUL
-    f5zOiPhoC2zTvWbnkCNGlqXDQTnPUop1+6gILI2rgFNozoTU9MeVaEXTuLsCQQDC
-    AGuNpReYucwVGYet+LuITyjs/krp3qfPhhByhtndk4cBA5H0i4ACodKyC6Zl7Tmf
-    oYaZoYWi6DzbQQUaIsKxAkEA2rXQjQFsfnSm+w/9067ChWg46p4lq5Na2NpcpFgH
-    waZKhM1W0oB8MX78M+0fG3xGUtywTx0D4N7pr1Tk2GTgNw==
-    -----END RSA PRIVATE KEY-----
+    <%= serviceProviderKey.gsub("\n", "\n    ")%>
   <% end %>
-  serviceProviderKeyPassword: <%= properties.login.saml.serviceProviderKeyPassword ? properties.login.saml.serviceProviderKeyPassword : "\"\"" %>
-  <% if !properties.login.self_service_links_enabled.nil? || !properties.login.signups_enabled.nil? %>
-  selfServiceLinksEnabled: <%= properties.login.self_service_links_enabled.nil? ? properties.login.signups_enabled : properties.login.self_service_links_enabled %>
+  <% if_p('login.saml.serviceProviderKeyPassword') do |serviceProviderKeyPassword| %>
+  serviceProviderKeyPassword: <%= serviceProviderKeyPassword %>
   <% end %>
+  <% if_p('login.self_service_links_enabled') do |selfServiceEnabled| %>
+  selfServiceLinksEnabled: <%= selfServiceEnabled %>
+  <% end .else_if_p('login.signups_enabled') do |selfServiceEnabled| %>
+  selfServiceLinksEnabled: <%= selfServiceEnabled %>
+  <% end %>
+  oauth:
+    <% if_p('login.oauth.providers') do |providers| %>
+    providers: <% providers.each do |idpAlias, provider| %>
+      <%= idpAlias %> : <% provider.each do |key,value| %>
+        <% if key.to_s.eql?('tokenKey') then %>
+        tokenKey: |
+          <%= value.gsub("\n", "\n            ")%>
+        <% elsif key.to_s.eql?('attributeMappings') then %>
+        attributeMappings: <% value.each do |key,val| %>
+          <%= key %>: <%= val %><% end %>
+        <% else %>
+        <%= key %>: <%= value %><% end %><% end %>
+    <% end %><% end %>
   saml:
-    <% if_p("properties.login.saml.signMetaData") do |signMetaData| %>
+    <% if_p('login.saml.signMetaData') do |signMetaData| %>
     signMetaData: <%= signMetaData %>
     <% end %>
-    <% if_p("properties.login.saml.signRequest") do |signRequest| %>
+    <% if_p('login.saml.signRequest') do |signRequest| %>
     signRequest: <%= signRequest %>
     <% end %>
-    providers: <% if properties.login.saml.providers then properties.login.saml.providers.marshal_dump.reject {|k,_| k.to_s == ''}.each do |idpAlias,idpProvider| %>
-      <%= idpAlias %>: <% idpProvider.marshal_dump.reject {|k,_| ["idpMetadata", "idpMetadataXML", "idpMetadataURL"].include?(k.to_s)}.each do |key,value|%>
-        <%= key %>: <%= value.is_a?(String) && value.match("\n") ? "| \n          " + value.gsub("\n", "\n          ") + "" : value %><% end %>
-        idpMetadata: <%= (idpProvider.idpMetadataURL || idpProvider.idpMetadataXML || idpProvider.idpMetadata).inspect %><% end %><% end %><% if properties.login.saml.idpEntityAlias && (properties.login.saml.idpMetadataURL || properties.login.saml.idp_metadata_file) %>
-      <%= properties.login.saml.idpEntityAlias %>:
-        idpMetadata: <%= properties.login.saml.idpMetadataURL ? properties.login.saml.idpMetadataURL : "/var/vcap/jobs/login/" + properties.login.saml.idp_metadata_file %>
-        assertionConsumerIndex: <%= (properties.login && properties.login.saml.assertionConsumerIndex) ? properties.login.saml.assertionConsumerIndex : 1 %>
-        nameID: <%= (properties.login && properties.login.saml.nameidFormat) ? properties.login.saml.nameidFormat : "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress" %>
-        metadataTrustCheck: <%= (properties.login.saml.metadataTrustCheck ? properties.login.saml.metadataTrustCheck : true) %>
+    <% if_p('login.saml.wantAssertionSigned') do |wantAssertionSigned| %>
+    wantAssertionSigned: <%= wantAssertionSigned %>
+    <% end %>
+    providers: <% if_p('login.saml.providers') do |samlProviders| samlProviders.reject {|k,_| k.to_s == ''}.each do |idpAlias,idpProvider| %>
+      <%= idpAlias %>: <% idpProvider.reject {|k,_| %w(idpMetadata idpMetadataXML idpMetadataURL).include?(k.to_s)}.each do |key,value|%>
+        <% if key.to_s.eql?('attributeMappings') then %>
+        attributeMappings: <% value.each do |key,val| %>
+          <%= key %>: <%= val %><% end %>
+        <% else %>
+        <%= key %>: <%= value.is_a?(String) && value.match("\n") ? "| \n          " + value.gsub("\n", "\n          ") + '' : value %><% end %><% end %>
+        idpMetadata: <%= (idpProvider['idpMetadataURL'] || idpProvider['idpMetadataXML'] || idpProvider['idpMetadata']).inspect %><% end %>
+    <% end %>
+    <% if_p('login.saml.idpEntityAlias') do |idpEntityAlias| %>
+      <%= idpEntityAlias %>:
+        idpMetadata: <%= p('login.saml.idpMetadataURL', "/var/vcap/jobs/login/#{p_opt('login.saml.idp_metadata_file')}") %>
+        assertionConsumerIndex: <%= p_opt('login.saml.assertionConsumerIndex') %>
+        nameID: <%= p_opt('login.saml.nameidFormat') %>
+        metadataTrustCheck: <%= p_opt('login.saml.metadataTrustCheck') %>
         showSamlLoginLink: true
         linkText: 'Use your corporate credentials'
+        <% if_p('login.saml.attributeMappings') do |attributeMappings| %>
+        attributeMappings: <% attributeMappings.each do |key,val| %>
+          <%= key %>: <%= val %><% end %>
+        <% end %>
     <% end %>
     socket:
-      connectionManagerTimeout: <%= properties.login.saml.socket.connectionManagerTimeout.nil? ? 10000 : properties.login.saml.socket.connectionManagerTimeout %>
-      soTimeout: <%= properties.login.saml.socket.soTimeout.nil? ? 10000 : properties.login.saml.socket.soTimeout %>
-<% end %>
+      connectionManagerTimeout: <%= p_opt('login.saml.socket.connectionManagerTimeout') %>
+      soTimeout: <%= p_opt('login.saml.socket.soTimeout') %>
   authorize:
-    url: <%= "#{protocol}://login.#{properties.domain}/oauth/authorize" %>
+    url: <%= login_authorizeUrl %>
 
-<% if properties.login.analytics && properties.login.analytics.code && properties.login.analytics.domain %>
+<% if_p('login.analytics.code', 'login.analytics.domain') do |code, domain| %>
 analytics:
-  code: <%= properties.login.analytics.code %>
-  domain: <%= properties.login.analytics.domain %>
+  code: <%= code %>
+  domain: <%= domain %>
 <% end %>

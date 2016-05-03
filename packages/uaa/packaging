@@ -7,6 +7,9 @@ if [[ $? != 0 ]] ; then
   exit 1
 fi
 
+# Allow for > 128bit encryption
+unzip  ${BOSH_COMPILE_TARGET}/openjdk/jce_policy-8.zip && mv UnlimitedJCEPolicyJDK8/*.jar jdk/jre/lib/security/ && rm -fr UnlimitedJCEPolicyJDK8
+
 # latest JDK release didn't have correct permissions
 chmod -R a+r jdk
 

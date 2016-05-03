@@ -1,5 +1,9 @@
 # BOSH Release for 18f-cf
 
+## Export Warning
+
+This fork of the UAA release includes > 128-bit encryption. The software may be subject to import or export regulations outside the United States.
+
 ## Usage
 
 To use this bosh release, first upload it to your bosh:

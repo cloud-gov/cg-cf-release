@@ -74,12 +74,15 @@ logout:
    <% end %>
 
 login:
-  <% if_p('login.invitations_enabled') do |company_name| %>
-    invitationsEnabled: <%= company_name %>
+  <% if_p('login.invitations_enabled') do |invitations_enabled| %>
+    invitationsEnabled: <%= invitations_enabled %>
   <% end %>
   branding:
   <% if_p('login.branding.company_name') do |company_name| %>
     companyName: <%= company_name %>
+  <% end %>
+  <% if_p('login.branding.from_address') do |from_address| %>
+    fromAddress: <%= from_address %>
   <% end %>
   <% if_p('login.branding.product_logo') do |product_logo| %>
     productLogo: <%= product_logo %>
@@ -93,9 +96,6 @@ login:
   <% if_p('login.branding.footer_links') do |footer_links| %>
     footerLinks: <% footer_links.each do |key,val| %>
       <%= key %>: <%= val %><% end %>
-  <% end %>
-  <% if_p('login.branding.from_address') do |company_name| %>
-    fromAddress: <%= company_name %>
   <% end %>
 <% if_p('login.home_redirect') do |home_redirect| %>
   homeRedirect: <%= home_redirect %>

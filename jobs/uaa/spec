@@ -152,6 +152,8 @@ properties:
       -----END RSA PRIVATE KEY-----
 
   #Branding/Customization
+  login.branding.from_address:
+    description: The from address used by emails sent by UAA
   login.branding.company_name:
     description: This name is used on the UAA Pages and in account management related communication in UAA
   login.branding.product_logo:
@@ -167,6 +169,8 @@ properties:
   login.asset_base_url:
     description: "Base url for static assets, allows custom styling of the login server.  Use '/resources/pivotal' for Pivotal style."
     default: /resources/oss
+  login.invitations_enabled:
+    description: Enable the UAA invitiation module
   login.links:
     description: "A hash of home/passwd/signup URLS (see commented examples below)"
   login.links.passwd:

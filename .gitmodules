@@ -1,4 +1,9 @@
 [submodule "src/collector"]
 	path = src/collector
 	url = https://github.com/18F/collector.git
-    branch = add-newrelic
+	branch = add-newrelic
+[submodule "src/uaa-release"]
+	path = src/uaa-release
+	url = https://github.com/cnelson/uaa-release.git
+	branch = master
+

@@ -74,9 +74,9 @@ logout:
    <% end %>
 
 login:
-  <% if_p('login.invitations_enabled') do |invitations_enabled| %>
-    invitationsEnabled: <%= invitations_enabled %>
-  <% end %>
+<% if_p('login.invitations_enabled') do |invitations_enabled| %>
+  invitationsEnabled: <%= invitations_enabled %>
+<% end %>
   branding:
   <% if_p('login.branding.company_name') do |company_name| %>
     companyName: <%= company_name %>

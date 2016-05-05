@@ -4,6 +4,6 @@
 	branch = add-newrelic
 [submodule "src/uaa-release"]
 	path = src/uaa-release
-	url = https://github.com/cnelson/uaa-release.git
+	url = https://github.com/18F/cg-uaa-release.git
 	branch = master
 

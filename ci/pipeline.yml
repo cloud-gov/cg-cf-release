@@ -1,0 +1,67 @@
+---
+jobs:
+- name: build-18f-cf-release
+  plan:
+  - aggregate:
+    - get: release-git-repo
+      resource: 18f-cf-release-git-repo
+      trigger: true
+    - get: pipeline-tasks
+    - get: final-builds-dir-tarball
+      resource: 18f-cf-final-builds-dir-tarball
+    - get: releases-dir-tarball
+      resource: 18f-cf-releases-dir-tarball
+  - task: finalize-release
+    file: pipeline-tasks/finalize-bosh-release.yml
+    params:
+      PRIVATE_YML_CONTENT: {{18f-cf-private-yml}}
+  - aggregate:
+    - put: 18f-cf-release-tarball
+      params:
+        file: finalized-release/18f-cf-*.tgz
+    - put: 18f-cf-final-builds-dir-tarball
+      params:
+        file: finalized-release/final-builds-dir-18f-cf.tgz
+    - put: 18f-cf-releases-dir-tarball
+      params:
+        file: finalized-release/releases-dir-18f-cf.tgz
+
+resources:
+- name: pipeline-tasks
+  type: git
+  source:
+    uri: {{pipeline-tasks-git-url}}
+    branch: {{pipeline-tasks-git-branch}}
+
+- name: 18f-cf-release-git-repo
+  type: git
+  source:
+    uri: {{18f-cf-release-git-url}}
+    branch: {{18f-cf-release-git-branch}}
+
+- name: 18f-cf-release-tarball
+  type: s3
+  source:
+    bucket: {{s3-bosh-releases-bucket}}
+    regexp: 18f-cf-(.*).tgz
+    access_key_id: {{s3-bosh-releases-access-key-id}}
+    secret_access_key: {{s3-bosh-releases-secret-access-key}}
+    region_name: {{aws-region}}
+
+- name: 18f-cf-final-builds-dir-tarball
+  type: s3
+  source:
+    bucket: {{s3-bosh-releases-bucket}}
+    versioned_file: final-builds-dir-18f-cf.tgz
+    access_key_id: {{s3-bosh-releases-access-key-id}}
+    secret_access_key: {{s3-bosh-releases-secret-access-key}}
+    region_name: {{aws-region}}
+
+- name: 18f-cf-releases-dir-tarball
+  type: s3
+  source:
+    bucket: {{s3-bosh-releases-bucket}}
+    versioned_file: releases-dir-18f-cf.tgz
+    access_key_id: {{s3-bosh-releases-access-key-id}}
+    secret_access_key: {{s3-bosh-releases-secret-access-key}}
+    region_name: {{aws-region}}

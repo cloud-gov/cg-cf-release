@@ -47,6 +47,7 @@ resources:
     access_key_id: {{s3-bosh-releases-access-key-id}}
     secret_access_key: {{s3-bosh-releases-secret-access-key}}
     region_name: {{aws-region}}
+    server_side_encryption: AES256
 
 - name: 18f-cf-final-builds-dir-tarball
   type: s3
@@ -56,6 +57,7 @@ resources:
     access_key_id: {{s3-bosh-releases-access-key-id}}
     secret_access_key: {{s3-bosh-releases-secret-access-key}}
     region_name: {{aws-region}}
+    server_side_encryption: AES256
 
 - name: 18f-cf-releases-dir-tarball
   type: s3
@@ -65,3 +67,4 @@ resources:
     access_key_id: {{s3-bosh-releases-access-key-id}}
     secret_access_key: {{s3-bosh-releases-secret-access-key}}
     region_name: {{aws-region}}
+    server_side_encryption: AES256

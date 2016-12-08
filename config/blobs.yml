@@ -27,14 +27,14 @@ ruby-2.1.6/yaml-0.1.6.tar.gz:
   object_id: 27c08c8b-e267-4c66-a648-b99f151e864a
   sha: f3d404e11bec3c4efcddfd14c42d46f1aabe0b5d
   size: 503012
-uaa/apache-tomcat-7.0.61.tar.gz:
-  object_id: 5976953a-6328-460c-abee-6e267c90b6b9
-  sha: 98ccbc95d029291e81bf818879ec8a0aa14465df
-  size: 8816567
+uaa/apache-tomcat-8.0.39.tar.gz:
+  object_id: b24b05a0-e6e8-4ce4-9391-e0345158bf00
+  sha: 18c54a81e05df39dec9ac02b143875a29b5502d5
+  size: 9304967
 uaa/cloudfoundry-identity-statsd-1.0.0.war:
-  object_id: 22cf44bf-6d80-47b0-8bac-2868edb45660
-  sha: 038c11e503bdbc5194c76535b22f5d4b85aeb37f
-  size: 11163261
+  object_id: 928a8aca-a8f0-4036-aa0c-804c463fc895
+  sha: c26a49ef1c8c5d6b215bf57ca6267e4d7f9f1a53
+  size: 11163253
 uaa/cloudfoundry-identity-varz-1.0.2.war:
   object_id: 0305a0bc-a34e-4817-8bcc-41d2f5374cb1
   sha: 8c35ed35fb6dfc4a97a243447763c635812066e8
@@ -47,11 +47,11 @@ openjdk/jce_policy-8.zip:
   object_id: 61a74b28-9d92-4517-945a-a25aa06017ae
   sha: 7d25dcee3e6ef2c984d748a14614b37c18ce3507
   size: 8409
-openjdk/openjdk-1.8.0_91-x86_64-trusty.tar.gz:
-  object_id: 59f066b2-1277-4f71-93db-1ec39d4b0c36
-  sha: 69c612c7f783aad33f4d73ec9b44e1a2ee50f386
-  size: 78278698
-openjdk/openjdk-1.8.0_91-x86_64-mountainlion.tar.gz:
-  object_id: c2a8f53a-6399-4f51-83df-9fcd47110a38
-  sha: 9e916262cf92d6ca0b09f9261d30aeca05f214d7
-  size: 75516939
+openjdk/openjdk-1.8.0_101-x86_64-trusty.tar.gz:
+  object_id: a59fd9c0-1b4f-408d-b73f-19262dfa85a3
+  sha: d77ee059e289ae52fb87812f1a2932268427dc26
+  size: 77696717
+openjdk/openjdk-1.8.0_101-x86_64-mountainlion.tar.gz:
+  object_id: a1a61854-e783-4265-928c-d66d8baf5eb6
+  sha: d9374652844bfd7bcdce8f8b605fb57fd76c9e36
+  size: 75550921

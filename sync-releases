@@ -1,0 +1,26 @@
+#!/bin/bash
+# vim: set ft=sh
+
+set -e
+
+#
+# A little environment validation
+#
+if [ -z "$UAA_THEIRS" ]; then
+  echo "must specify \$UAA_THEIRS path to local uaa-release repository" >&2
+  exit 1
+fi
+
+# shellcheck disable=SC2045
+for file in $(ls ./jobs/uaa/templates)
+do
+  file_name=$(echo "$file" | cut -d '/' -f 2)
+  their_file="$UAA_THEIRS/jobs/uaa/templates/$file_name"
+  our_file="./jobs/uaa/templates/$file_name"
+  if [ -a "$their_file" ]
+  then
+    echo "compairing $their_file to $our_file"
+    vimdiff "$their_file" "$our_file"
+    echo ""
+  fi
+done

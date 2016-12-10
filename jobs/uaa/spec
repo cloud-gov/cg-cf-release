@@ -225,6 +225,9 @@ properties:
   login.prompt.password.text:
     description: "The text used to prompt for a password during login"
     default: Password
+  login.idpDiscoveryEnabled:
+    description: "IDP Discovery should be set to true if you have configured more than one identity provider for UAA. The discovery relies on email domain being set for each additional provider. This property will also enable a list of selectable accounts that have signed in via the browser."
+    default: false
   login.smtp:
     description: "SMTP server configuration, for password reset emails etc."
   login.smtp.host:
@@ -237,6 +240,8 @@ properties:
     description: "SMTP server username"
   login.smtp.password:
     description: "SMTP server password"
+  login.smtp.from_address:
+    description: The from address used by emails sent by UAA
 
   # Clients
   uaa.clients:
@@ -250,7 +255,22 @@ properties:
         authorities: test_resource.test_action
         scope: test_resource.test_action
         redirect-uri: http://login.example.com
+        autoapprove: true
         app-launch-url: http://myloginpage.com
+        show-on-homepage: true
+        app-icon: iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAD1BMVEWZttQvMDEoKisqKywAAAApvvoVAAAAGElEQVQYlWNgYUQBLAxMDCiAeXgLoHsfAD03AHOyfqy1AAAAAElFTkSuQmCC
+      app:
+        id: app
+        override: true
+        secret: app-secret
+        authorized-grant-types: authorization_code,client_credentials,refresh_token
+        authorities: test_resource.test_action
+        scope: test_resource.test_action,test_resource.other_action
+        redirect-uri: http://login.example.com
+        autoapprove:
+        - test_resource.test_action
+        - test_resource.other_action
+        app-launch-url: http://myapppage.com
         show-on-homepage: true
         app-icon: iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAD1BMVEWZttQvMDEoKisqKywAAAApvvoVAAAAGElEQVQYlWNgYUQBLAxMDCiAeXgLoHsfAD03AHOyfqy1AAAAAElFTkSuQmCC
   uaa.admin.client_secret:
@@ -317,6 +337,7 @@ properties:
       - profile
       - roles
       - user_attributes
+      - uaa.offline_token
   uaa.jwt.revocable:
     default: false
     description: "Set to true if you wish that even JWT tokens become individually revocable and stored in the UAA token storage. This setting applies to the default zone only."
@@ -350,13 +371,16 @@ properties:
           waZKhM1W0oB8MX78M+0fG3xGUtywTx0D4N7pr1Tk2GTgNw==
           -----END RSA PRIVATE KEY-----
   uaa.jwt.signing_key:
-    description: "The key used to sign the JWT-based OAuth2 tokens"
+    description: "Deprecated. Use uaa.jwt.policy.keys. The key used to sign the JWT-based OAuth2 tokens"
   uaa.jwt.verification_key:
-    description: "The key used to verify JWT-based OAuth2 tokens"
+    description: "Deprecated. Use uaa.jwt.policy.keys. The key used to verify JWT-based OAuth2 tokens"
   uaa.jwt.claims.exclude:
     description: "List of claims to exclude from the JWT-based OAuth2 tokens"
     example:
      - authorities
+  uaa.jwt.refresh.restrict_grant:
+    description: "Disallows refresh-token grant for any client for which the user has not approved the `uaa.offline_token` scope"
+    default: false
 
   # Global security policies (for all zones)
   uaa.authentication.policy.global.lockoutAfterFailures:
@@ -427,6 +451,13 @@ properties:
             origin: origin-value - most commonly uaa
     example:
       - marissa|koala|marissa@test.org|Marissa|Bloggs
+        password: koala
+        email: marissa@test.org
+        firstName: Marissa
+        lastName: Bloggs
+        groups:
+          - group_name
+        origin: uaa
   uaa.scim.external_groups:
     description: |
       External group mappings. Either formatted as an OpenStruct or a list of pipe-separated specifications. The list format is deprecated.
@@ -579,6 +610,9 @@ properties:
     example:
       - admin
       - user
+  uaa.ldap.add_shadow_user_on_login:
+    description: "If set to false, only users pre-populated in the UAA user database will be allowed to authenticate via LDAP. If set to true, any user from LDAP will be allowed to authenticate and an internal user will be created if one does not yet exist."
+    default: true
   login.ldap.profile_type:
     description: "Deprecated. Use uaa.ldap.profile_type - login.ldap prefix is used for backwards compatibility to enable ldap from login config"
   login.ldap.url:
@@ -620,6 +654,7 @@ properties:
         tokenUrl: <URL to the token endpoint of the provider>
         tokenKey: <Token verification key>
         tokenKeyUrl: <URL for token verification. Will be used if tokenKey is not specified.>
+        issuer: <optional - if the issuer URL is different than tokenUrl URL>
         scopes:
           - openid
           - <other scope>
@@ -718,6 +753,7 @@ properties:
         showSamlLoginLink: true
         linkText: Log in with My Saml Identity Provider
         groupMappingMode: AS_SCOPES
+        skipSslValidation: false
   login.saml.socket.connectionManagerTimeout:
     description: "Timeout in milliseconds for connection pooling for SAML metadata HTTP requests"
     default: 10000
@@ -732,24 +768,10 @@ properties:
     default: true
   login.saml.wantAssertionSigned:
     description: "Global property to request that external IDPs sign their SAML assertion before sending them to the UAA"
-    default: false
-  login.saml.idpMetadataURL:
-    description: "Deprecated. Use login.saml.providers list objects"
-  login.saml.idp_metadata_file:
-    description: "Deprecated. Use login.saml.providers list objects"
-  login.saml.assertionConsumerIndex:
-    description: "Deprecated. Use login.saml.providers list objects"
-    default: 1
-  login.saml.nameidFormat:
-    description: "Deprecated. Use login.saml.providers list objects"
-    default: "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress"
-  login.saml.metadataTrustCheck:
-    description: "Deprecated. Use login.saml.providers list objects"
     default: true
-  login.saml.idpEntityAlias:
-    description: "Deprecated. Use login.saml.providers list objects"
-  login.entity_id:
-    description: "Deprecated. Use login.saml.entityid"
+  login.saml.signatureAlgorithm:
+    description: "Signature hashing algorithm for SAML. Can be SHA1, SHA256, or SHA512."
+    example: SHA256
   login.url:
     description: |
       Set if you have an external login server.

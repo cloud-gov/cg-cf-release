@@ -16,10 +16,11 @@ log4j.appender.SYSLOG.Facility=USER
 log4j.appender.SYSLOG.Threshold=INFO
 log4j.appender.SYSLOG.FacilityPrinting=false
 log4j.appender.SYSLOG.SyslogHost=localhost
-log4j.appender.SYSLOG.layout = org.apache.log4j.PatternLayout
+log4j.appender.SYSLOG.layout = org.cloudfoundry.identity.uaa.util.LineAwareLayout
+log4j.appender.SYSLOG.layout.lineLayout=org.apache.log4j.PatternLayout
 # Workaround to log4j's SyslogAppender not supporting tags/identities.
 # Prefix the message with the tag (vcap.uaa) and set FacilityPrinting off.
-log4j.appender.SYSLOG.layout.ConversionPattern=vcap.uaa: ${LOG_PATTERN}
+log4j.appender.SYSLOG.layout.lineLayout.ConversionPattern=vcap.uaa: ${LOG_PATTERN}
 
 log4j.category.org.springframework.security=<%= p("uaa.logging_level") %>
 log4j.category.org.cloudfoundry.identity=<%= p("uaa.logging_level") %>
@@ -33,4 +34,13 @@ log4j.category.org.apache.http.wire=INFO
 log4j.category.org.springframework.aop.aspectj.AspectJExpressionPointcut=INFO
 log4j.category.org.springframework.beans.factory.support.DefaultListableBeanFactory=INFO
 log4j.category.org.springframework.beans.factory.support.DisposableBeanAdapter=INFO
+
+AUDIT_EVENT_FILE=${LOG_PATH}/uaa_events.log
+
+log4j.appender.auditEventLog=org.apache.log4j.RollingFileAppender
+log4j.appender.auditEventLog.File=${AUDIT_EVENT_FILE}
+log4j.appender.auditEventLog.layout=org.apache.log4j.PatternLayout
+log4j.appender.auditEventLog.layout.ConversionPattern=${LOG_PATTERN}%n
+
+log4j.category.UAA.Audit=INFO, auditEventLog
 

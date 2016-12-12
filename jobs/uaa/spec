@@ -9,6 +9,7 @@ templates:
   dns_health_check.erb: bin/dns_health_check
   health_check: bin/health_check
   install_uaa_crt: bin/install_uaa_crt
+  pre-start: bin/pre-start
   post-start: bin/post-start
 
   uaa.yml.erb: config/uaa.yml
@@ -18,6 +19,7 @@ templates:
   varz.log4j.properties: config/varz.log4j.properties
   tomcat.logging.properties: config/tomcat/logging.properties
   tomcat.server.xml.erb: config/tomcat/server.xml
+  tomcat.context.xml.erb: config/tomcat/context.xml
   ldap.crt.erb: config/ldap.crt
   login.yml.erb: config/login.yml
   messages.properties.erb: config/messages.properties
@@ -50,19 +52,13 @@ properties:
       - hostname1
       - hostname2.localhost
       - hostname3.example.com
-  uaa.restricted_ips_regex:
-    description: "A pipe delimited set of regular expressions of IP addresses that can reach the listening HTTP port of the server."
-    default: 10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|169\.254\.\d{1,3}\.\d{1,3}|127\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.1[6-9]{1}\.\d{1,3}\.\d{1,3}|172\.2[0-9]{1}\.\d{1,3}\.\d{1,3}|172\.3[0-1]{1}\.\d{1,3}\.\d{1,3}
   uaa.proxy_ips_regex:
     description: |
       A pipe delimited set of regular expressions of IP addresses that are considered reverse proxies.
       When a request from these IP addresses come in, the x-forwarded-for and x-forwarded-proto headers will be respected.
-      If the uaa.restricted_ips_regex is set, it will be appended to this list for backwards compatibility purposes
-      If spiff has been used and includes templates/cf-jobs.yml to generate the manifest. This list will automatically
-      contain the Router IP addresses
     default: 10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|169\.254\.\d{1,3}\.\d{1,3}|127\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.1[6-9]{1}\.\d{1,3}\.\d{1,3}|172\.2[0-9]{1}\.\d{1,3}\.\d{1,3}|172\.3[0-1]{1}\.\d{1,3}\.\d{1,3}
   uaa.proxy.servers:
-    description: "Array of the router IPs acting as the first group of HTTP/TCP backends. These will be added to the proxy_ips_regex as exact matches. When using spiff, these will be router_z1 and router_z2 static IPs from cf-jobs.yml"
+    description: "Array of the router IPs acting as the first group of HTTP/TCP backends. These will be added to the proxy_ips_regex as exact matches."
     default: []
   uaa.newrelic:
     description: |
@@ -72,28 +68,23 @@ properties:
       The JVM option -javaagent:/path/to/newrelic.jar will be added to Apache Tomcat's startup script
       The enablement of the NewRelic agent in the UAA is triggered by the property uaa.newrelic.common.license_key
       The property uaa.newrelic.common.license_key must be set!
-  uaa.dump_requests:
-    description: "When set to true dumps UAA requests to uaa.log"
-    default: false
   env.http_proxy:
-    description: "The http_proxy across the VMs"
+    description: "The http_proxy across the VMs used for all requests over http"
+    example: http://test.proxy:8080
   env.https_proxy:
-    description: "The https_proxy across the VMs"
+    description: "The http_proxy across the VMs used for all requests over https"
+    example: http://test.proxy:8080
   env.no_proxy:
     description: "Set No_Proxy across the VMs"
     example: "localhost,127.0.0.0/8,127.0.1.1"
   uaa.issuer:
     description: "The url to use as the issuer URI"
-  domain:
-    description: "Deprecated. Use uaa.url for setting the location of UAA"
   uaa.logging_level:
     description: Set UAA logging level.  (e.g. TRACE, DEBUG, INFO)
     default: DEBUG
   uaa.logging_use_rfc3339:
     description: "Sets the time format for log messages to be yyyy-MM-dd'T'HH:mm:ss.SSSXXX instead of yyyy-MM-dd HH:mm:ss.SSS"
     default: false
-  login.uaa_base:
-    description: "Deprecated. Use uaa.url for setting the location of UAA."
 
   # SSL
   login.protocol:
@@ -103,7 +94,7 @@ properties:
     description: "Request came in on a secure connection. Expect the load balancer/proxy to set the proper headers (x-forwarded-for, x-forwarded-proto)"
     default: true
   uaa.ssl.port:
-    description: If this property Tomcat will listen to this port and expect https traffic. If null, tomcat will not listen to this port
+    description: If this property Tomcat will listen to this port and expect https traffic. If set to -1, Tomcat will not listen for https traffic.
     default: 8443
   uaa.ssl.protocol_header:
     description: The header to look for to determine if ssl termination was performed by a front end load balancer.
@@ -152,8 +143,6 @@ properties:
       -----END RSA PRIVATE KEY-----
 
   #Branding/Customization
-  login.branding.from_address:
-    description: The from address used by emails sent by UAA
   login.branding.company_name:
     description: This name is used on the UAA Pages and in account management related communication in UAA
   login.branding.product_logo:
@@ -167,10 +156,8 @@ properties:
     example:
       linkDisplayName: linkDisplayUrl
   login.asset_base_url:
-    description: "Base url for static assets, allows custom styling of the login server.  Use '/resources/pivotal' for Pivotal style."
+    description: "Deprecated in favor of branding properties. Base url for static assets, allows custom styling of the login server.  Use '/resources/pivotal' for Pivotal style."
     default: /resources/oss
-  login.invitations_enabled:
-    description: Enable the UAA invitiation module
   login.links:
     description: "A hash of home/passwd/signup URLS (see commented examples below)"
   login.links.passwd:
@@ -181,8 +168,6 @@ properties:
     default: '/create_account'
   login.home_redirect:
     description: URL for configuring a custom home page
-  login.tiles:
-    description: "A list of links to other services to show on the landing page after log in."
   login.self_service_links_enabled:
     description: "Enable self-service account creation and password resets links."
   login.analytics.code:
@@ -212,19 +197,19 @@ properties:
     description: "A list of URLs. When this list is non null, including empty, and disable=false,
     logout redirects are allowed, but limited to the whitelist URLs. If a redirect parameter value is not white
     listed, redirect will be to the default URL."
-  login.signups_enabled:
-    description: "Deprecated. Use login.self_service_links_enabled. Instructs UAA to use 'enable account creation flow'. Enabled by default."
-    default: true
-
-  # Email
-  login.notifications.url:
-    description: "The url for the notifications service (configure to use Notifications Service instead of SMTP server)"
   login.prompt.username.text:
     description: "The text used to prompt for a username during login"
     default: Email
   login.prompt.password.text:
     description: "The text used to prompt for a password during login"
     default: Password
+  login.idpDiscoveryEnabled:
+    description: "IDP Discovery should be set to true if you have configured more than one identity provider for UAA. The discovery relies on email domain being set for each additional provider. This property will also enable a list of selectable accounts that have signed in via the browser."
+    default: false
+
+  # Email
+  login.notifications.url:
+    description: "The url for the notifications service (configure to use Notifications Service instead of SMTP server)"
   login.smtp:
     description: "SMTP server configuration, for password reset emails etc."
   login.smtp.host:
@@ -237,6 +222,14 @@ properties:
     description: "SMTP server username"
   login.smtp.password:
     description: "SMTP server password"
+  login.smtp.from_address:
+    description: The from address used by emails sent by UAA
+  login.smtp.auth:
+    description: "If true, authenticate using AUTH command. https://javamail.java.net/nonav/docs/api/com/sun/mail/smtp/package-summary.html"
+    default: false
+  login.smtp.starttls:
+    description: "If true, send STARTTLS command before login to server. https://javamail.java.net/nonav/docs/api/com/sun/mail/smtp/package-summary.html"
+    default: false
 
   # Clients
   uaa.clients:
@@ -250,18 +243,26 @@ properties:
         authorities: test_resource.test_action
         scope: test_resource.test_action
         redirect-uri: http://login.example.com
+        autoapprove: true
         app-launch-url: http://myloginpage.com
+        show-on-homepage: true
+        app-icon: iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAD1BMVEWZttQvMDEoKisqKywAAAApvvoVAAAAGElEQVQYlWNgYUQBLAxMDCiAeXgLoHsfAD03AHOyfqy1AAAAAElFTkSuQmCC
+      app:
+        id: app
+        override: true
+        secret: app-secret
+        authorized-grant-types: authorization_code,client_credentials,refresh_token
+        authorities: test_resource.test_action
+        scope: test_resource.test_action,test_resource.other_action
+        redirect-uri: http://login.example.com
+        autoapprove:
+        - test_resource.test_action
+        - test_resource.other_action
+        app-launch-url: http://myapppage.com
         show-on-homepage: true
         app-icon: iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAD1BMVEWZttQvMDEoKisqKywAAAApvvoVAAAAGElEQVQYlWNgYUQBLAxMDCiAeXgLoHsfAD03AHOyfqy1AAAAAElFTkSuQmCC
   uaa.admin.client_secret:
     description: "Secret of the admin client - a client named admin with uaa.admin as an authority"
-  uaa.login.client_secret:
-    description: 'Default login client secret, if no login client is defined'
-  uaa.client.autoapprove:
-    description: "Deprecated"
-    default:
-      - login
-      - support-signon
 
   # Security policies (for the UAA zone)
   uaa.authentication.policy.lockoutAfterFailures:
@@ -299,7 +300,7 @@ properties:
     default: false
   uaa.disableInternalUserManagement:
     description: "Disables UI and API for internal user management"
-    default: false  
+    default: false
   uaa.user.authorities:
     description: "Contains a list of the default authorities/scopes assigned to a user"
     default:
@@ -317,6 +318,7 @@ properties:
       - profile
       - roles
       - user_attributes
+      - uaa.offline_token
   uaa.jwt.revocable:
     default: false
     description: "Set to true if you wish that even JWT tokens become individually revocable and stored in the UAA token storage. This setting applies to the default zone only."
@@ -350,13 +352,16 @@ properties:
           waZKhM1W0oB8MX78M+0fG3xGUtywTx0D4N7pr1Tk2GTgNw==
           -----END RSA PRIVATE KEY-----
   uaa.jwt.signing_key:
-    description: "The key used to sign the JWT-based OAuth2 tokens"
+    description: "Deprecated. Use uaa.jwt.policy.keys. The key used to sign the JWT-based OAuth2 tokens"
   uaa.jwt.verification_key:
-    description: "The key used to verify JWT-based OAuth2 tokens"
+    description: "Deprecated. Use uaa.jwt.policy.keys. The key used to verify JWT-based OAuth2 tokens"
   uaa.jwt.claims.exclude:
     description: "List of claims to exclude from the JWT-based OAuth2 tokens"
     example:
      - authorities
+  uaa.jwt.refresh.restrict_grant:
+    description: "Disallows refresh-token grant for any client for which the user has not approved the `uaa.offline_token` scope"
+    default: false
 
   # Global security policies (for all zones)
   uaa.authentication.policy.global.lockoutAfterFailures:
@@ -407,8 +412,6 @@ properties:
     description: |
       A list of users to be bootstrapped with authorities.
       Each entry supports the following format:
-        Short Pipe: username|password|comma,separated,groups
-        Long Pipe: username|password|email|firstName|lastName|comma,separated,groups|origin
         Short OpenStruct:
           - name: username
             password: password
@@ -427,9 +430,16 @@ properties:
             origin: origin-value - most commonly uaa
     example:
       - marissa|koala|marissa@test.org|Marissa|Bloggs
+        password: koala
+        email: marissa@test.org
+        firstName: Marissa
+        lastName: Bloggs
+        groups:
+          - group_name
+        origin: uaa
   uaa.scim.external_groups:
     description: |
-      External group mappings. Either formatted as an OpenStruct or a list of pipe-separated specifications. The list format is deprecated.
+      External group mappings. Either formatted as an OpenStruct.
       As an OpenStruct, the mapping additionally specifies an origin to which the mapping is applied:
         origin1:
           external_group1:
@@ -444,8 +454,6 @@ properties:
             - internal_group3
             - internal_group4
             - internal_group5
-      As a list, each entry consists of the following (The origin defaults to ldap in this case.):
-        - internal_group_name|space_delimited_external_groups another_group another_group_etc
   uaa.scim.groups:
     description: |
       Contains a hash of group names and their descriptions. These groups will be added to the UAA database for the default zone but not associated with any user.
@@ -455,8 +463,7 @@ properties:
             groups:
               my-test-group: 'My test group description'
               another-group: 'Another group description'
-      Deprecated format(still supported, but may be removed in the future): 
-      Comma separated list of groups that should be added to the UAA db, but not assigned to a user by default.
+
   # Database
   uaadb.address:
     description: "The UAA database IP address"
@@ -474,6 +481,9 @@ properties:
   uaa.database.max_idle_connections:
     description: "The max number of open idle connections to the DB from a running UAA instance"
     default: 10
+  uaa.database.min_idle_connections:
+    description: "The min number of open idle connections to the DB from a running UAA instance"
+    default: 0
   uaa.database.remove_abandoned:
     description: "True if connections that are left open longer then abandoned_timeout seconds during a session(time between borrow and return from pool) should be forcibly closed"
     default: false
@@ -494,7 +504,7 @@ properties:
     description: "The file to be used for configuring the LDAP authentication. Options are: 'simple-bind', 'search-and-bind', 'search-and-compare'"
     default: search-and-bind
   uaa.ldap.url:
-    description: "The URL to the ldap server, must start with ldap:// or ldaps://"
+    description: "The URL to the ldap server, must start with ldap:// or ldaps://. Allows multiple servers to be specified, space separated"
   uaa.ldap.userDNPattern:
     description: "Used with simple-bind only. A semi-colon separated lists of DN patterns to construct a DN direct from the user ID without performing a search."
   uaa.ldap.userDNPatternDelimiter:
@@ -523,6 +533,12 @@ properties:
     description: "Used with ldaps:// URLs. The certificate, if self signed, to be trusted by this connection."
   uaa.ldap.sslCertificateAlias:
     description: "Used with ldaps:// URLs. The certificate alias, to be trusted by this connection and stored in the keystore."
+  uaa.ldap.ssl.skipverification:
+    description: "Set to true, and LDAPS connection will not validate the server certificate."
+    default: false
+  uaa.ldap.ssl.tls:
+    description: "If using StartTLS, what mode to enable. Default is none, not enabled. Possible values are none, simple"
+    default: none
   uaa.ldap.mailAttributeName:
     description: "The name of the LDAP attribute that contains the users email address"
     default: mail
@@ -543,11 +559,8 @@ properties:
   uaa.ldap.groups.profile_type:
     description: "What type of group integration should be used. Values are: 'no-groups', 'groups-as-scopes', 'groups-map-to-scopes'"
     default: "no-groups"
-  uaa.ldap.groups.autoAdd:
-    description: "Set to true when profile_type=groups_as_scopes to auto create scopes for a user. Ignored for other profiles."
-    default: "true"
   uaa.ldap.groups.searchBase:
-    description: "Search start point for a user group membership search"
+    description: "Search start point for a user group membership search, and sequential nested searches.. You can set this value to 'memberOf' when using Active Directory and skip group search but use the calculated memberOf field on the user records. No nested search will be performed."
     default: ""
   uaa.ldap.groups.groupRoleAttribute:
     description: "Used with groups-as-scopes, defines the attribute that holds the scope name(s)."
@@ -579,35 +592,9 @@ properties:
     example:
       - admin
       - user
-  login.ldap.profile_type:
-    description: "Deprecated. Use uaa.ldap.profile_type - login.ldap prefix is used for backwards compatibility to enable ldap from login config"
-  login.ldap.url:
-    description: "Deprecated. Use uaa.ldap.url - login.ldap prefix is used for backwards compatibility to enable ldap from login config"
-  login.ldap.userDNPattern:
-    description: "Deprecated. Use uaa.ldap.userDNPattern - login.ldap prefix is used for backwards compatibility to enable ldap from login config"
-  login.ldap.userDN:
-    description: "Deprecated. Use uaa.ldap.userDN - login.ldap prefix is used for backwards compatibility to enable ldap from login config"
-  login.ldap.userPassword:
-    description: "Deprecated. Use uaa.ldap.userPassword - login.ldap prefix is used for backwards compatibility to enable ldap from login config"
-  login.ldap.searchBase:
-    description: "Deprecated. Use uaa.ldap.searchBase - login.ldap prefix is used for backwards compatibility to enable ldap from login config"
-    default: ""
-  login.ldap.searchFilter:
-    description: "Deprecated. Use uaa.ldap.searchFilter - login.ldap prefix is used for backwards compatibility to enable ldap from login config"
-    default: "cn={0}"
-  login.ldap.passwordAttributeName:
-    description: "Deprecated. Use uaa.ldap.passwordAttributeName - login.ldap prefix is used for backwards compatibility to enable ldap from login config"
-    default: "userPassword"
-  login.ldap.localPasswordCompare:
-    description: "Deprecated. Use uaa.ldap.localPasswordCompare - login.ldap prefix is used for backwards compatibility to enable ldap from login config"
-    default: "true"
-  login.ldap.passwordEncoder:
-    description: "Deprecated. Use uaa.ldap.passwordEncoder - login.ldap prefix is used for backwards compatibility to enable ldap from login config"
-    default: "org.cloudfoundry.identity.uaa.login.ldap.DynamicPasswordComparator"
-  login.ldap.sslCertificate:
-    description: "Deprecated. Use uaa.ldap.sslCertificate - login.ldap prefix is used for backwards compatibility to enable ldap from login config"
-  login.ldap.sslCertificateAlias:
-    description: "Deprecated. Use uaa.ldap.sslCertificateAlias - login.ldap prefix is used for backwards compatibility to enable ldap from login config"
+  uaa.ldap.add_shadow_user_on_login:
+    description: "If set to false, only users pre-populated in the UAA user database will be allowed to authenticate via LDAP. If set to true, any user from LDAP will be allowed to authenticate and an internal user will be created if one does not yet exist."
+    default: true
 
   # OpenID Connect/OAuth
 
@@ -620,6 +607,7 @@ properties:
         tokenUrl: <URL to the token endpoint of the provider>
         tokenKey: <Token verification key>
         tokenKeyUrl: <URL for token verification. Will be used if tokenKey is not specified.>
+        issuer: <optional - if the issuer URL is different than tokenUrl URL>
         scopes:
           - openid
           - <other scope>
@@ -718,6 +706,7 @@ properties:
         showSamlLoginLink: true
         linkText: Log in with My Saml Identity Provider
         groupMappingMode: AS_SCOPES
+        skipSslValidation: false
   login.saml.socket.connectionManagerTimeout:
     description: "Timeout in milliseconds for connection pooling for SAML metadata HTTP requests"
     default: 10000
@@ -732,24 +721,10 @@ properties:
     default: true
   login.saml.wantAssertionSigned:
     description: "Global property to request that external IDPs sign their SAML assertion before sending them to the UAA"
-    default: false
-  login.saml.idpMetadataURL:
-    description: "Deprecated. Use login.saml.providers list objects"
-  login.saml.idp_metadata_file:
-    description: "Deprecated. Use login.saml.providers list objects"
-  login.saml.assertionConsumerIndex:
-    description: "Deprecated. Use login.saml.providers list objects"
-    default: 1
-  login.saml.nameidFormat:
-    description: "Deprecated. Use login.saml.providers list objects"
-    default: "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress"
-  login.saml.metadataTrustCheck:
-    description: "Deprecated. Use login.saml.providers list objects"
     default: true
-  login.saml.idpEntityAlias:
-    description: "Deprecated. Use login.saml.providers list objects"
-  login.entity_id:
-    description: "Deprecated. Use login.saml.entityid"
+  login.saml.signatureAlgorithm:
+    description: "Signature hashing algorithm for SAML. Can be SHA1, SHA256, or SHA512."
+    example: SHA256
   login.url:
     description: |
       Set if you have an external login server.

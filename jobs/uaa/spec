@@ -429,7 +429,7 @@ properties:
             email: email
             origin: origin-value - most commonly uaa
     example:
-      - marissa|koala|marissa@test.org|Marissa|Bloggs
+      - name: marissa
         password: koala
         email: marissa@test.org
         firstName: Marissa

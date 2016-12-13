@@ -4,4 +4,4 @@ blobstore:
   options:
     bucket_name: 18f-boshrelease-blob
 
-final_name: 18f-cf
+name: 18f-cf

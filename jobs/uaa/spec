@@ -34,7 +34,7 @@ properties:
   # General server properties
   uaa.catalina_opts:
     description: "The options used to configure Tomcat"
-    default: -Xmx768m -XX:MaxPermSize=256m
+    default: -Xmx768m -XX:MaxMetaspaceSize=256m
   uaa.port:
     description: "Port that uaa will accept connections on"
     default: 8080
@@ -223,7 +223,7 @@ properties:
   login.smtp.password:
     description: "SMTP server password"
   login.smtp.from_address:
-    description: The from address used by emails sent by UAA
+    description: "SMTP from address"
   login.smtp.auth:
     description: "If true, authenticate using AUTH command. https://javamail.java.net/nonav/docs/api/com/sun/mail/smtp/package-summary.html"
     default: false
@@ -270,7 +270,7 @@ properties:
     default: 5
   uaa.authentication.policy.countFailuresWithinSeconds:
     description: "Number of seconds in which lockoutAfterFailures failures must occur in order for account to be locked"
-    default: 3600
+    default: 1200
   uaa.authentication.policy.lockoutPeriodSeconds:
     description: "Number of seconds to lock out an account when lockoutAfterFailures failures is exceeded"
     default: 300
@@ -505,6 +505,7 @@ properties:
     default: search-and-bind
   uaa.ldap.url:
     description: "The URL to the ldap server, must start with ldap:// or ldaps://. Allows multiple servers to be specified, space separated"
+    example: ldap://localhost:389 ldaps://secure.host:636
   uaa.ldap.userDNPattern:
     description: "Used with simple-bind only. A semi-colon separated lists of DN patterns to construct a DN direct from the user ID without performing a search."
   uaa.ldap.userDNPatternDelimiter:

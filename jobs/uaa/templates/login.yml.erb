@@ -192,6 +192,7 @@
     add_value(params, code, 'analytics', 'code')
     add_value(params, domain, 'analytics', 'domain')
   end
+
   #validate that we have all required parameters
   message = ''
   message = message + (is_missing(params, 'login', 'serviceProviderKey')?'\nlogin.saml.serviceProviderKey' : '')

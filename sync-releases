@@ -24,7 +24,7 @@ do
   our_file="$UAA_OURS/templates/$file_name"
   if [ -a "$their_file" ]
   then
-    echo "compairing $their_file to $our_file"
+    echo "comparing $their_file to $our_file"
     vimdiff "$their_file" "$our_file"
     echo ""
   fi

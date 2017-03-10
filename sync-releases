@@ -31,4 +31,4 @@ do
 done
 
 echo "Sync the spec file"
-vimdiff $UAA_THEIRS/jobs/uaa/spec $UAA_OURS/spec
+vimdiff $UAA_THEIRS/spec $UAA_OURS/spec
